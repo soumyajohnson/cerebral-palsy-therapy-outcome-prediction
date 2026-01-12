@@ -1,0 +1,87 @@
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+
+# ================================
+# Virtual Environments
+# ================================
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# ================================
+# Jupyter Notebook
+# ================================
+.ipynb_checkpoints/
+
+# ================================
+# Data (DO NOT COMMIT REAL DATA)
+# ================================
+Data/*.csv
+Data/*.xlsx
+Data/*.xls
+Data/*.tsv
+Data/*.parquet
+Data/*.json
+
+# Allow README and placeholder
+!Data/README.md
+!Data/.gitkeep
+
+# ================================
+# Model Artifacts
+# ================================
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.onnx
+*.sav
+
+# ================================
+# Logs & Outputs
+# ================================
+logs/
+*.log
+outputs/
+results/
+figures/
+plots/
+
+# ================================
+# OS Files
+# ================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ================================
+# IDE / Editor
+# ================================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ================================
+# Experiment Tracking (optional)
+# ================================
+wandb/
+mlruns/
+
+# ================================
+# Secrets
+# ================================
+*.env
+.env.*
+secrets/
