@@ -1,0 +1,105 @@
+name: Git Activity Logger
+
+on:
+  create:
+  delete:
+  push:
+    branches-ignore:
+      - git-activity-logs
+  pull_request:
+    types: [opened, closed]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: git-activity-log-writer
+  cancel-in-progress: false
+
+env:
+  ACTIVITY_LOG_BRANCH: git-activity-logs
+  ACTIVITY_LOG_FILE: logs/git_activity.csv
+
+jobs:
+  log-git-activity:
+    runs-on: ubuntu-latest
+
+    if: >
+      github.actor != 'github-actions[bot]' &&
+      !(
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/git-activity-logs'
+      ) &&
+      !(
+        github.event_name == 'pull_request' &&
+        (
+          github.head_ref == 'git-activity-logs' ||
+          github.base_ref == 'git-activity-logs'
+        )
+      ) &&
+      !(
+        (github.event_name == 'create' || github.event_name == 'delete') &&
+        github.event.ref == 'git-activity-logs'
+      )
+
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          path: source
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout activity log branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.ACTIVITY_LOG_BRANCH }}
+          path: activity-log
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install logger dependency
+        working-directory: source
+        run: npm install yaml --no-save
+
+      - name: Copy existing CSV from activity log branch
+        run: |
+          mkdir -p source/logs
+
+          if [ -f "activity-log/${ACTIVITY_LOG_FILE}" ]; then
+            cp "activity-log/${ACTIVITY_LOG_FILE}" "source/${ACTIVITY_LOG_FILE}"
+          else
+            echo "timestamp,username,email,event,branch,commit_id,pr_number" > "source/${ACTIVITY_LOG_FILE}"
+          fi
+
+      - name: Run Git activity logger
+        working-directory: source
+        run: node scripts/gitActivityLogger.cjs
+
+      - name: Copy updated CSV back to activity log branch
+        run: |
+          mkdir -p "activity-log/logs"
+          cp "source/${ACTIVITY_LOG_FILE}" "activity-log/${ACTIVITY_LOG_FILE}"
+
+      - name: Commit updated activity log to separate branch
+        working-directory: activity-log
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add "${ACTIVITY_LOG_FILE}"
+
+          if git diff --staged --quiet; then
+            echo "No git activity log changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update git activity log [skip ci]"
+          git pull --rebase origin "${ACTIVITY_LOG_BRANCH}"
+          git push origin HEAD:"${ACTIVITY_LOG_BRANCH}"

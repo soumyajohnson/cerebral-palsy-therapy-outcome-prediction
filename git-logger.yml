@@ -1,0 +1,17 @@
+logging:
+  enabled: true
+  output: logs/git_activity.csv
+  events:
+    - branch_created
+    - branch_deleted
+    - push
+    - pull_request_created
+    - pull_request_merged
+    - pull_request_closed
+  include:
+    - username
+    - email
+    - timestamp
+    - branch
+    - commit_id
+    - pr_number
