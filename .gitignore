@@ -51,8 +51,7 @@ Data/*.json
 # ================================
 # Logs & Outputs
 # ================================
-logs/
-*.log
+
 outputs/
 results/
 figures/
